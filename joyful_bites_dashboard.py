@@ -279,8 +279,9 @@ def create_segment_comparison(df):
             title="Average Order Value by Segment",
             yaxis_title="PHP",
             showlegend=False,
-            height=350,
-            margin=dict(l=50, r=50, t=50, b=50)
+            height=400,
+            margin=dict(l=50, r=50, t=80, b=50),
+            yaxis=dict(range=[0, max([segment_stats.loc[s, 'Avg Order Value'] for s in segment_stats.index]) * 1.15])
         )
         
         st.plotly_chart(fig, use_container_width=True)
@@ -304,8 +305,9 @@ def create_segment_comparison(df):
             title="Visit Frequency by Segment",
             yaxis_title="Visits per Month",
             showlegend=False,
-            height=350,
-            margin=dict(l=50, r=50, t=50, b=50)
+            height=400,
+            margin=dict(l=50, r=50, t=80, b=50),
+            yaxis=dict(range=[0, max([segment_stats.loc[s, 'Visit Frequency/Month'] for s in segment_stats.index]) * 1.2])
         )
         
         st.plotly_chart(fig, use_container_width=True)
@@ -331,7 +333,9 @@ def create_segment_comparison(df):
             title="Customer Lifetime Value by Segment",
             yaxis_title="PHP",
             showlegend=False,
-            height=350
+            height=400,
+            margin=dict(l=50, r=50, t=80, b=50),
+            yaxis=dict(range=[0, max([segment_stats.loc[s, 'Lifetime Value'] for s in segment_stats.index]) * 1.15])
         )
         
         st.plotly_chart(fig, use_container_width=True)
@@ -355,7 +359,9 @@ def create_segment_comparison(df):
             title="Average Party Size by Segment",
             yaxis_title="People",
             showlegend=False,
-            height=350
+            height=400,
+            margin=dict(l=50, r=50, t=80, b=50),
+            yaxis=dict(range=[0, max([segment_stats.loc[s, 'Avg Party Size'] for s in segment_stats.index]) * 1.2])
         )
         
         st.plotly_chart(fig, use_container_width=True)
