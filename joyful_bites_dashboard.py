@@ -456,7 +456,9 @@ def create_persona_deep_dive(df, persona_name):
             yaxis_title="Number of Customers",
             xaxis_title="",
             height=350,
-            showlegend=False
+            showlegend=False,
+            margin=dict(l=50, r=50, t=60, b=50),
+            yaxis=dict(range=[0, max(channel_dist.values) * 1.2])
         )
         
         st.plotly_chart(fig, use_container_width=True)
@@ -480,7 +482,9 @@ def create_persona_deep_dive(df, persona_name):
             xaxis_title="Number of Customers",
             yaxis_title="",
             height=350,
-            showlegend=False
+            showlegend=False,
+            margin=dict(l=20, r=100, t=30, b=50),
+            xaxis=dict(range=[0, max(time_dist.values) * 1.15])
         )
         
         st.plotly_chart(fig, use_container_width=True)
@@ -573,7 +577,9 @@ def create_persona_deep_dive(df, persona_name):
             xaxis_title="Number of Customers",
             yaxis_title="",
             height=400,
-            showlegend=False
+            showlegend=False,
+            margin=dict(l=20, r=100, t=30, b=50),
+            xaxis=dict(range=[0, max(item_counts.values) * 1.15])
         )
         
         st.plotly_chart(fig, use_container_width=True)
