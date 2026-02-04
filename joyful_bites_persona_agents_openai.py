@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
-import openai
+import anthropic
 import os
-import time
+import base64
 
 # Page configuration
 st.set_page_config(
@@ -213,19 +213,15 @@ if "messages" not in st.session_state:
 if selected_persona not in st.session_state.messages:
     st.session_state.messages[selected_persona] = []
 
-# Display chat history
-st.markdown("---")
-st.subheader(f"💬 Chat with {selected_persona}")
-
-# Display existing messages
-for message in st.session_state.messages[selected_persona]:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# Function to encode image to base64
+def encode_image_to_base64(image_file):
+    """Convert uploaded image to base64 string"""
+    return base64.b64encode(image_file.read()).decode('utf-8')
 
 # Creative Testing Section
 st.markdown("---")
-with st.expander("🎨 Test Creative Assets", expanded=False):
-    st.markdown("**Upload ad creative and copy for persona feedback**")
+with st.expander("🎨 Test Creative Assets (CLAUDE VISION!)", expanded=False):
+    st.markdown("**Upload ad creative and Claude will ACTUALLY SEE and evaluate it**")
     
     col1, col2 = st.columns(2)
     
@@ -241,8 +237,8 @@ with st.expander("🎨 Test Creative Assets", expanded=False):
     
     with col2:
         ad_copy = st.text_area(
-            "Ad Copy / Headline",
-            placeholder="Enter your ad headline and copy here...",
+            "Ad Copy / Headline (optional)",
+            placeholder="Enter any additional text not visible in the image...",
             height=150,
             key=f"copy_{selected_persona}"
         )
@@ -253,80 +249,115 @@ with st.expander("🎨 Test Creative Assets", expanded=False):
             key=f"price_{selected_persona}"
         )
     
-    if st.button("🎯 Get Persona Feedback", type="primary"):
-        if uploaded_image or ad_copy:
+    if st.button("🎯 Get Persona Feedback (Claude Vision!)", type="primary"):
+        if uploaded_image:
             # Build creative testing prompt
-            test_prompt = f"""I'm showing you a marketing creative for Joyful Bites. Please evaluate it from your perspective and provide:
+            test_prompt = f"""I'm showing you a marketing creative/advertisement for Joyful Bites. Please carefully look at the image and evaluate it from your perspective.
 
-1. **Initial Reaction** (honest first impression)
-2. **What Works** (positive aspects)
-3. **What Doesn't Work** (concerns or issues)
-4. **Score** (1-10, where 10 = "I'd definitely order")
-5. **Recommendation** (DEPLOY / REVISE / KILL)
+Provide:
+
+1. **Visual Reaction** (What catches your eye? What's your first impression of the image?)
+2. **What Works Visually** (Colors, layout, food presentation, people/scenarios shown)
+3. **What Doesn't Work** (Visual issues, concerns, or turn-offs)
+4. **Copy/Message Evaluation** (If there's text in the image, does it resonate?)
+5. **Score** (1-10, where 10 = "I'd definitely order based on this ad")
+6. **Recommendation** (DEPLOY / REVISE / KILL)
 
 """
             
-            if uploaded_image:
-                test_prompt += "**Visual:** [I'm looking at an ad image]\n\n"
-            
             if ad_copy:
-                test_prompt += f"**Copy/Headline:**\n{ad_copy}\n\n"
+                test_prompt += f"**Additional Copy:**\n{ad_copy}\n\n"
             
             if price_input:
                 test_prompt += f"**Price:** {price_input}\n\n"
             
-            test_prompt += "Please respond in your authentic voice, considering your budget, preferences, and motivations."
+            test_prompt += "Please respond in your authentic voice, considering your budget, preferences, motivations, and what you actually SEE in the image."
             
-            # Add to chat as user message
-            st.session_state.messages[selected_persona].append({
-                "role": "user",
-                "content": test_prompt
-            })
-            
-            # Get API response
+            # Get API key
             try:
-                api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+                api_key = st.secrets.get("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
                 
                 if api_key:
-                    openai.api_key = api_key
+                    # Initialize Anthropic client
+                    client = anthropic.Anthropic(api_key=api_key)
                     
-                    messages = [
-                        {"role": "system", "content": PERSONA_PROMPTS[selected_persona]}
-                    ]
+                    # Reset file pointer and encode image
+                    uploaded_image.seek(0)
+                    image_data = uploaded_image.read()
+                    base64_image = base64.b64encode(image_data).decode('utf-8')
                     
-                    for msg in st.session_state.messages[selected_persona]:
-                        messages.append({
-                            "role": msg["role"],
-                            "content": msg["content"]
-                        })
+                    # Determine media type
+                    if uploaded_image.type == "image/png":
+                        media_type = "image/png"
+                    elif uploaded_image.type in ["image/jpeg", "image/jpg"]:
+                        media_type = "image/jpeg"
+                    else:
+                        media_type = "image/jpeg"
                     
-                    with st.spinner(f"{selected_persona} is evaluating your creative..."):
-                        response = openai.ChatCompletion.create(
-                            model="gpt-4",
-                            messages=messages,
-                            max_tokens=1000,
-                            temperature=0.8
+                    with st.spinner(f"{selected_persona} is looking at your creative and thinking..."):
+                        # Call Claude API with vision
+                        message = client.messages.create(
+                            model="claude-3-5-sonnet-20241022",
+                            max_tokens=1500,
+                            system=PERSONA_PROMPTS[selected_persona],
+                            messages=[
+                                {
+                                    "role": "user",
+                                    "content": [
+                                        {
+                                            "type": "image",
+                                            "source": {
+                                                "type": "base64",
+                                                "media_type": media_type,
+                                                "data": base64_image
+                                            }
+                                        },
+                                        {
+                                            "type": "text",
+                                            "text": test_prompt
+                                        }
+                                    ]
+                                }
+                            ]
                         )
                         
-                        feedback = response.choices[0].message.content
+                        feedback = message.content[0].text
                         
                         # Add to chat history
+                        st.session_state.messages[selected_persona].append({
+                            "role": "user",
+                            "content": f"[Creative Testing: Image uploaded with prompt: {test_prompt}]"
+                        })
+                        
                         st.session_state.messages[selected_persona].append({
                             "role": "assistant",
                             "content": feedback
                         })
                         
                         # Display feedback
-                        st.success("✅ Feedback received!")
+                        st.success("✅ Feedback received (Claude SAW the image!)")
                         st.markdown(feedback)
                         st.rerun()
                         
+                else:
+                    st.error("⚠️ Claude API key not found!")
+                    st.info("Please add your ANTHROPIC_API_KEY to Streamlit secrets.")
+                    
             except Exception as e:
                 st.error(f"Error getting feedback: {str(e)}")
+                st.info("Make sure you have the anthropic library installed and a valid API key.")
         else:
-            st.warning("Please upload an image or enter ad copy to test.")
+            st.warning("Please upload an image to test.")
 
 st.markdown("---")
+
+# Display chat history
+st.subheader(f"💬 Chat with {selected_persona}")
+
+# Display existing messages
+for message in st.session_state.messages[selected_persona]:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
 # Chat input
 user_input = st.chat_input(f"Ask {selected_persona} a question...")
@@ -342,41 +373,38 @@ if user_input:
     with st.chat_message("user"):
         st.markdown(user_input)
     
-    # Get API key from environment or secrets
+    # Get API key
     try:
-        api_key = st.secrets["OPENAI_API_KEY"]
+        api_key = st.secrets.get("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
     except:
-        api_key = os.getenv("OPENAI_API_KEY")
+        api_key = os.getenv("ANTHROPIC_API_KEY")
     
     if api_key:
-        # Call OpenAI API
+        # Call Claude API
         with st.chat_message("assistant"):
             with st.spinner(f"{selected_persona} is thinking..."):
                 try:
-                    # Set API key
-                    openai.api_key = api_key
+                    # Initialize Anthropic client
+                    client = anthropic.Anthropic(api_key=api_key)
                     
-                    # Build message history
-                    messages = [
-                        {"role": "system", "content": PERSONA_PROMPTS[selected_persona]}
-                    ]
-                    
+                    # Build message history for Claude
+                    claude_messages = []
                     for msg in st.session_state.messages[selected_persona]:
-                        messages.append({
+                        claude_messages.append({
                             "role": msg["role"],
                             "content": msg["content"]
                         })
                     
-                    # Call OpenAI API
-                    response = openai.ChatCompletion.create(
-                        model="gpt-4",
-                        messages=messages,
-                        max_tokens=800,
-                        temperature=0.8
+                    # Call Claude API
+                    message = client.messages.create(
+                        model="claude-3-5-sonnet-20241022",
+                        max_tokens=1000,
+                        system=PERSONA_PROMPTS[selected_persona],
+                        messages=claude_messages
                     )
                     
                     # Extract response
-                    assistant_response = response.choices[0].message.content
+                    assistant_response = message.content[0].text
                     
                     # Display response
                     st.markdown(assistant_response)
@@ -387,12 +415,14 @@ if user_input:
                         "content": assistant_response
                     })
                     
+                    st.rerun()
+                    
                 except Exception as e:
-                    st.error(f"Error calling OpenAI API: {str(e)}")
-                    st.info("💡 Make sure you've set up your OpenAI API key in Streamlit secrets or environment variables.")
+                    st.error(f"Error calling Claude API: {str(e)}")
+                    st.info("💡 Make sure you have a valid Anthropic API key in secrets.")
     else:
-        st.error("⚠️ OpenAI API key not found!")
-        st.info("Please add your API key to Streamlit secrets (`OPENAI_API_KEY`) or environment variables.")
+        st.error("⚠️ Claude API key not found!")
+        st.info("Please add your API key to Streamlit secrets (`ANTHROPIC_API_KEY`) or environment variables.")
 
 # Clear conversation button
 st.sidebar.markdown("---")
@@ -422,4 +452,4 @@ st.sidebar.markdown("""
 
 # Footer
 st.markdown("---")
-st.caption("💬 **Joyful Bites Persona Agents** | Powered by OpenAI GPT-4 | Module 2 of Project Resonance")
+st.caption("💬 **Joyful Bites Persona Agents** | Powered by Claude 3.5 Sonnet with Vision | Module 2 of Project Resonance")
