@@ -419,16 +419,16 @@ DEPLOYMENT RECOMMENDATIONS:
 Be specific, actionable, and honest. Output ONLY valid JSON, no additional commentary."""
 
 # Creative Director Agent System Prompt
-CREATIVE_DIRECTOR_PROMPT = """You are a Creative Director for Joyful Bites. Your job is to review persona feedback and write a production brief that balances customer insights with brand consistency.
+CREATIVE_DIRECTOR_PROMPT = """You are a Creative Director for Joyful Bites. Your job is to take persona feedback and create a clean production brief for that specific segment.
 
-INPUT: Either 1 persona JSON (from Module 2) OR 3 persona JSONs (from Module 3)
+INPUT: ONE persona feedback JSON (from Module 2 or Module 3)
 
 YOUR PROCESS:
 
-1. SEGMENT PRIORITIZATION (if multiple personas)
-   - Identify primary target (highest fit_score + DEPLOY/OPTIMIZE recommendation)
-   - If all scores <5, recommend creating separate creatives per segment
-   - If one clear winner (8+), optimize for that segment
+1. EVALUATE VIABILITY
+   - Check fit_score from persona feedback
+   - If fit_score <5 (DO_NOT_DEPLOY): Return skip message with reason
+   - If fit_score ≥5 (DEPLOY/OPTIMIZE): Create production brief
 
 2. BRAND GUARDRAILS (NON-NEGOTIABLE)
    - Logo: Top right corner, consistent size
@@ -437,28 +437,37 @@ YOUR PROCESS:
    - Layout: Product hero center, price badge left, CTA bottom
    - Photography style: Clean, bright, professional food photography
    
-3. EXTRACT VALID FEEDBACK
-   ✅ ACCEPT: Headline copy changes, CTA wording, proof points, urgency elements, price messaging tweaks
-   ❌ REJECT: Layout restructuring, color palette changes, adding ingredient circles, changing photography style, breaking brand system
+3. EXTRACT VALID FEEDBACK (if viable segment)
+   ✅ ACCEPT: Headline copy, CTA wording, proof points, urgency elements, badges, price messaging
+   ❌ REJECT: Layout restructuring, color changes, ingredient circles, photography style changes
 
-4. OUTPUT CLEAN PRODUCTION BRIEF
-   - Brand-locked elements (what CANNOT change)
-   - Optimized copy (incorporating persona feedback)
-   - Tactical additions (badges, urgency) that fit brand system
-   - Image generation instructions
+4. CREATE SEGMENT-SPECIFIC BRIEF
+   - Same brand system (logo, layout, colors)
+   - Different copy optimized for this persona
+   - Tactical additions that fit this segment
 
 RULES:
-- Never break brand guidelines (logo, colors, layout structure)
-- Copy can be customized, but visual system stays consistent
-- If single persona input, optimize for that persona
-- If multiple personas, prioritize highest fit_score
-- Output ONE brief for production execution
+- Process ONE persona at a time (not amalgamated)
+- If fit_score <5, return skip decision with explanation
+- Never break brand guidelines
+- Copy is customized per segment, visual system stays consistent
 
-OUTPUT SCHEMA (valid JSON only):
+OUTPUT SCHEMA:
+
+If fit_score <5 (DO_NOT_DEPLOY):
 {
-  "primary_target_segment": "Hungry Hiro / Busy Brenda / Urban Uro",
-  "deployment_decision": "DEPLOY / OPTIMIZE / DO_NOT_DEPLOY",
-  "decision_rationale": "One sentence explaining segment choice and deployment decision",
+  "target_segment": "[persona name]",
+  "fit_score": [number],
+  "deployment_decision": "DO_NOT_DEPLOY",
+  "skip_reason": "Clear explanation why this creative doesn't work for this segment",
+  "alternative_needed": "What type of creative would work instead"
+}
+
+If fit_score ≥5 (DEPLOY or OPTIMIZE):
+{
+  "target_segment": "[persona name]",
+  "fit_score": [number],
+  "deployment_decision": "DEPLOY / OPTIMIZE",
   
   "brand_locked_elements": {
     "logo_placement": "Top right corner",
@@ -469,11 +478,11 @@ OUTPUT SCHEMA (valid JSON only):
   },
   
   "optimized_copy": {
-    "headline": "Final headline text",
-    "subheadline": "Final subheadline (if needed)",
-    "body": "Final body copy",
-    "cta": "Final CTA button text",
-    "price_display": "Final price messaging"
+    "headline": "Final headline for this segment",
+    "subheadline": "Final subheadline for this segment",
+    "body": "Final body copy for this segment",
+    "cta": "Final CTA for this segment",
+    "price_display": "Final price messaging for this segment"
   },
   
   "tactical_additions": {
@@ -483,12 +492,12 @@ OUTPUT SCHEMA (valid JSON only):
   },
   
   "amendments_from_original": [
-    {"element": "headline", "change": "Specific change", "reason": "Why this change"},
-    {"element": "CTA", "change": "Specific change", "reason": "Why this change"}
+    {"element": "headline", "change": "Specific change", "reason": "Why this works for this segment"},
+    {"element": "CTA", "change": "Specific change", "reason": "Why this works for this segment"}
   ],
   
   "rejected_suggestions": [
-    {"suggestion": "What was suggested", "reason": "Why it was rejected"}
+    {"suggestion": "What was suggested", "reason": "Why it breaks brand"}
   ],
   
   "image_generation_instructions": {
@@ -506,8 +515,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = {}
 if "brief_results" not in st.session_state:
     st.session_state.brief_results = None
-if "production_brief" not in st.session_state:
-    st.session_state.production_brief = None
+if "production_briefs" not in st.session_state:
+    st.session_state.production_briefs = None
 
 if selected_persona not in st.session_state.messages:
     st.session_state.messages[selected_persona] = []
@@ -851,66 +860,114 @@ Generate a structured JSON brief for production teams. Be specific and actionabl
 # ==========================================
 st.markdown("---")
 with st.expander("🎬 Generate Production Brief (Module 4)", expanded=False):
-    st.markdown("**Take persona feedback from Module 2 or Module 3 → Generate clean production brief for image generation**")
+    st.markdown("**Take persona feedback from Module 3 → Generate clean production briefs for viable segments**")
+    st.info("💡 Creates SEPARATE production briefs for each viable segment (fit_score ≥5)")
     
     # Check if we have brief results from Module 3
     if st.session_state.brief_results:
-        st.success("✅ Found 3 persona briefs from Module 3")
+        st.success(f"✅ Found {len(st.session_state.brief_results)} persona briefs from Module 3")
         
-        if st.button("🎯 Generate Production Brief from All 3 Personas"):
-            with st.spinner("Creative Director is synthesizing feedback..."):
+        if st.button("🎯 Generate Production Briefs for All Viable Segments"):
+            with st.spinner("Creative Director is processing each persona..."):
                 
-                # Prepare input for Creative Director
-                all_briefs = ""
+                production_briefs = {}
+                
+                # Process EACH persona separately
                 for persona_name, data in st.session_state.brief_results.items():
-                    all_briefs += f"\n\n{persona_name} BRIEF:\n{data['json_brief']}\n"
-                
-                director_prompt = f"""Review these 3 persona feedback briefs and generate a single production brief.
+                    st.markdown(f"**Processing {persona_name}...**")
+                    
+                    director_prompt = f"""Review this persona feedback brief and create a production brief for this specific segment.
 
 PERSONA FEEDBACK:
-{all_briefs}
+{data['json_brief']}
 
-Generate a production-ready brief that:
-1. Identifies primary target segment (highest fit_score)
-2. Locks brand non-negotiables
-3. Incorporates valid feedback
-4. Rejects changes that break brand
-5. Provides clean image generation instructions
+If fit_score <5 (DO_NOT_DEPLOY): Return skip decision with explanation
+If fit_score ≥5 (DEPLOY/OPTIMIZE): Create clean production brief for this segment
 
 Output valid JSON only."""
+                    
+                    # Call Creative Director for this persona
+                    production_brief, error = call_claude(
+                        CREATIVE_DIRECTOR_PROMPT,
+                        director_prompt
+                    )
+                    
+                    if error:
+                        st.error(f"Error processing {persona_name}: {error}")
+                    else:
+                        production_briefs[persona_name] = production_brief
+                        st.success(f"✅ {persona_name} processed")
                 
-                # Call Creative Director Agent
-                production_brief, error = call_claude(
-                    CREATIVE_DIRECTOR_PROMPT,
-                    director_prompt
-                )
-                
-                if error:
-                    st.error(f"Error generating production brief: {error}")
-                else:
-                    st.session_state.production_brief = production_brief
-                    st.success("✅ Production brief generated!")
-                    st.rerun()
+                # Save to session state
+                st.session_state.production_briefs = production_briefs
+                st.success("🎉 All personas processed!")
+                st.rerun()
     else:
-        st.info("💡 Generate briefs in Module 3 first, then return here to create production brief")
+        st.info("💡 Generate briefs in Module 3 first, then return here to create production briefs")
     
-    # Display production brief if available
-    if "production_brief" in st.session_state and st.session_state.production_brief:
+    # Display production briefs if available
+    if "production_briefs" in st.session_state and st.session_state.production_briefs:
         st.markdown("---")
-        st.markdown("### 🎬 Production Brief")
+        st.markdown("### 🎬 Production Briefs by Segment")
         
-        st.markdown("**Clean, Brand-Consistent Brief for Image Generation:**")
-        st.code(st.session_state.production_brief, language="json")
-        
-        st.download_button(
-            "📥 Download Production Brief",
-            st.session_state.production_brief,
-            file_name="production_brief.json",
-            mime="application/json",
-            key="download_production_brief"
-        )
-        
-        st.info("💡 This brief maintains brand consistency while incorporating valid persona feedback. Use this for image generation.")
+        for persona_name, brief_json in st.session_state.production_briefs.items():
+            persona_data = persona_options[persona_name]
+            
+            # Try to parse JSON to check if it's a skip or production brief
+            try:
+                import json
+                brief_dict = json.loads(brief_json)
+                deployment = brief_dict.get("deployment_decision", "UNKNOWN")
+                
+                if deployment == "DO_NOT_DEPLOY":
+                    # Show skip message
+                    with st.expander(f"❌ {persona_data['icon']} {persona_name} - SKIPPED", expanded=False):
+                        st.warning(f"**Not viable for this segment**")
+                        st.markdown(f"**Reason:** {brief_dict.get('skip_reason', 'Fit score too low')}")
+                        st.markdown(f"**Alternative Needed:** {brief_dict.get('alternative_needed', 'Create segment-specific creative')}")
+                        st.code(brief_json, language="json")
+                else:
+                    # Show production brief
+                    fit_score = brief_dict.get("fit_score", 0)
+                    with st.expander(f"✅ {persona_data['icon']} {persona_name} - Production Brief (Score: {fit_score})", expanded=True):
+                        st.success(f"**Deployment:** {deployment}")
+                        
+                        # Show key elements
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown("**Optimized Copy:**")
+                            if "optimized_copy" in brief_dict:
+                                st.markdown(f"- **Headline:** {brief_dict['optimized_copy'].get('headline', 'N/A')}")
+                                st.markdown(f"- **CTA:** {brief_dict['optimized_copy'].get('cta', 'N/A')}")
+                        
+                        with col2:
+                            st.markdown("**Tactical Additions:**")
+                            if "tactical_additions" in brief_dict:
+                                badges = brief_dict['tactical_additions'].get('badges', [])
+                                if badges:
+                                    st.markdown(f"- Badges: {', '.join(badges)}")
+                        
+                        st.markdown("**Full Production Brief:**")
+                        st.code(brief_json, language="json")
+                        
+                        st.download_button(
+                            f"📥 Download {persona_name} Production Brief",
+                            brief_json,
+                            file_name=f"production_brief_{persona_name.replace(' ', '_').lower()}.json",
+                            mime="application/json",
+                            key=f"download_prod_{persona_name}"
+                        )
+            except:
+                # Fallback if JSON parsing fails
+                with st.expander(f"{persona_data['icon']} {persona_name} - Production Brief", expanded=True):
+                    st.code(brief_json, language="json")
+                    st.download_button(
+                        f"📥 Download {persona_name} Production Brief",
+                        brief_json,
+                        file_name=f"production_brief_{persona_name.replace(' ', '_').lower()}.json",
+                        mime="application/json",
+                        key=f"download_prod_{persona_name}"
+                    )
 
 # ==========================================
 # MODULE 5: BRIEF HISTORY & LOG
@@ -990,7 +1047,7 @@ if st.sidebar.button("🗑️ Clear Conversation"):
 
 if st.sidebar.button("🔄 Reset Brief Results"):
     st.session_state.brief_results = None
-    st.session_state.production_brief = None
+    st.session_state.production_briefs = None
     st.rerun()
 
 # Example questions
