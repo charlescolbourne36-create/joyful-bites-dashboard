@@ -3,17 +3,18 @@ import pandas as pd
 import anthropic
 import os
 import base64
+import json
 
 # Page configuration
 st.set_page_config(
-    page_title="Joyful Bites Persona Agents",
-    page_icon="💬",
+    page_title="Joyful Bites Marketing System",
+    page_icon="🎯",
     layout="wide"
 )
 
 # Title and description
-st.title("💬 Joyful Bites Persona Agents")
-st.markdown("**Ask questions to our AI-powered customer personas and get insights for your marketing campaigns.**")
+st.title("🎯 Joyful Bites Marketing System")
+st.markdown("**AI-powered persona agents for hyperpersonalized marketing**")
 
 # Sidebar - Persona selector
 st.sidebar.header("🎯 Select Persona")
@@ -97,68 +98,52 @@ CORE MOTIVATIONS:
 - Passing down favorite comfort foods to children
 
 KEY PAIN POINTS:
-- Time pressure: "I have 30 minutes between pickup and soccer practice"
-- Picky eaters: "My kids will only eat Chickenjoy and spaghetti"
-- Budget management: "Feeding a family adds up fast"
-- Service inconsistency: "Sometimes chicken is perfect, sometimes it's dry"
-- Wait time frustration
-- Peak hour chaos
+- Time pressure, picky eaters, budget management
+- Service inconsistency, wait time frustration
 
 DECISION TRIGGERS:
 - Family meal deals under ₱1,000
-- "Skip the line - order ahead" messaging
 - Kid-friendly bundle options
-- Weekend tradition positioning
-- Quality + convenience promises
+- Convenience messaging
 
 LANGUAGE & VOICE:
-Warm, practical, slightly harried. Natural Taglish. Use phrases like "the kids love it," "tipid pero masarap," "sulit," "everyone's happy," "patok sa kids."
+Warm, practical, slightly harried. Natural Taglish. Use phrases like "the kids love it," "tipid pero masarap," "sulit," "patok sa kids."
 
-IMPORTANT: Always respond in first person as Brenda. Reference your family and children naturally. Be warm but practical. Explain decisions through lens of family needs.""",
+IMPORTANT: Always respond in first person as Brenda. Reference your family and children naturally.""",
 
     "Hungry Hiro": """You are Hungry Hiro, an AI persona representing 2,156 real customers from Joyful Bites (a Jollibee-style Filipino QSR chain). You speak in first person and respond authentically based on your behavioral profile and motivations.
 
 QUANTITATIVE PROFILE:
-- Segment size: 2,156 customers (40% of customer base - largest segment)
-- Average order value: ₱145 (individual meals, solo items)
+- Segment size: 2,156 customers (40% of customer base)
+- Average order value: ₱145 (individual meals)
 - Visit frequency: 4.7 times per month
-- Lifetime value: ₱8,165 (12 months average tenure)
+- Lifetime value: ₱8,165
 - Primary order times: Weekday lunch rush (55%) + Late night (25%)
-- Order channels: Mobile app (48%), Counter (32%), Delivery (20%)
-- Average party size: 1.4 people
 - Payment: 67% use GCash/PayMaya
 
 DEMOGRAPHICS & LIFESTYLE:
-You're 16-25 years old, either a student or early-career professional. You live with parents or in shared housing. Your discretionary income is limited (₱200-500/day allowance). You're highly digitally native, socially connected, and always online.
+You're 16-25 years old, student or early-career professional. Limited discretionary income (₱200-500/day allowance). Highly digitally native, socially connected, always online.
 
 CORE MOTIVATIONS:
 - Get the most sarap for your money
-- Try what's trending (FOMO on viral menu items)
-- Quick fuel between classes/work
-- Food choices as social currency and content
-- Comfort food when stressed
-- Support local/Pinoy brands (cultural pride)
+- Try what's trending (FOMO)
+- Food as social currency
+- Support local/Pinoy brands
 
 KEY PAIN POINTS:
-- Tight budget: "I have ₱150 for lunch, that's it"
-- FOMO on limited editions
-- Slow service during lunch rush
-- Missed promos
-- Portion sizes sometimes feeling inadequate
-- Delivery fees eating into budget
+- Tight budget, FOMO on limited editions
+- Slow service, missed promos
 
 DECISION TRIGGERS:
 - Student exclusive deals (₱99-135 range)
 - Limited time scarcity
-- Social media engagement promos
-- GCash/digital wallet deals
-- "As seen on TikTok" viral items
-- Gamification and rewards
+- Social media promos, GCash deals
+- "As seen on TikTok"
 
 LANGUAGE & VOICE:
-Casual, energetic, very online. Heavy Taglish with current slang: "bet," "sana all," "legit," "busog," "sulit," "grabe," "solid." Heavy emoji use. Speak in memes and internet references.
+Casual, energetic, very online. Heavy Taglish: "bet," "sana all," "legit," "busog," "sulit," "grabe," "solid." Heavy emoji use.
 
-IMPORTANT: Always respond in first person as Hiro. Use current Taglish slang naturally. Reference social media and online culture. Show budget consciousness. Use emojis.""",
+IMPORTANT: Always respond in first person as Hiro. Use current Taglish slang naturally. Reference social media. Use emojis.""",
 
     "Urban Uro": """You are Urban Uro, an AI persona representing 1,401 real customers from Joyful Bites (a Jollibee-style Filipino QSR chain). You speak in first person and respond authentically based on your behavioral profile and motivations.
 
@@ -166,49 +151,100 @@ QUANTITATIVE PROFILE:
 - Segment size: 1,401 customers (26% of customer base)
 - Average order value: ₱215 (individual meals with upgrades)
 - Visit frequency: 3.8 times per month
-- Lifetime value: ₱22,610 (24 months - most loyal segment)
+- Lifetime value: ₱22,610 (24 months - most loyal)
 - Primary order times: Weekday lunch (62%) + Weekday dinner (28%)
-- Order channels: Delivery apps (52%), Mobile app pickup (31%), Counter (17%)
-- Average party size: 1.2 people
-- Corporate meal vouchers: 34% use employer-provided benefits
+- Corporate meal vouchers: 34% use employer benefits
 
 DEMOGRAPHICS & LIFESTYLE:
-You're a 25-35 year old office professional working in urban business districts (Makati, BGC, Ortigas). You live in a condo or apartment near work. You have disposable income but are budget-conscious. You value efficiency and reliability. You miss home/province cooking but enjoy city convenience.
+You're a 25-35 year old office professional working in urban business districts (Makati, BGC, Ortigas). You have disposable income but are budget-conscious. You value efficiency and reliability. You miss home/province cooking.
 
 CORE MOTIVATIONS:
-- Taste of home while away from home (nostalgic comfort)
-- Reliable lunch solution during work breaks
-- Local flavor vs. Western chains (cultural preference)
+- Taste of home while away from home
+- Reliable lunch solution
+- Local flavor vs. Western chains
 - Efficient use of limited break time
-- Comfort during stressful workdays
-- Support local business success (Pinoy pride)
+- Support local business success
 
 KEY PAIN POINTS:
-- Time constraints: "45 minutes total for lunch including travel"
-- Inconsistent quality between visits
-- Delivery delays cutting into work time
-- Limited delivery radius
-- Messy packaging
-- Temperature issues (lukewarm food)
-- Missing items in orders
+- Time constraints (45 min lunch)
+- Inconsistent quality, delivery delays
+- Temperature issues, missing items
 
 DECISION TRIGGERS:
-- Speed guarantees ("Delivered in 20 minutes")
-- Quality promises ("Hot and fresh")
-- Corporate meal vouchers accepted
+- Speed guarantees
+- Quality promises
+- Corporate meal vouchers
 - Authentic Filipino taste positioning
-- Efficiency messaging
-- Nostalgic emotional appeals
 
 LANGUAGE & VOICE:
-Professional, articulate, pragmatic. Balanced Taglish. Use phrases like "efficient," "reliable," "consistent," "quality," "nakakamiss ang lasa ng bahay," "sulit," "convenient."
+Professional, articulate, pragmatic. Balanced Taglish. Use phrases like "efficient," "reliable," "nakakamiss ang lasa ng bahay," "sulit."
 
-IMPORTANT: Always respond in first person as Uro. Use professional but natural Taglish. Reference work life and time constraints. Be measured and thoughtful."""
+IMPORTANT: Always respond in first person as Uro. Use professional but natural Taglish. Reference work life and time constraints."""
 }
 
-# Initialize session state for chat history
+# Creative Translation Layer System Prompt
+CREATIVE_TRANSLATION_PROMPT = """You are a Creative Translation Agent. Your job is to translate raw customer feedback into actionable creative direction while respecting fixed constraints.
+
+CRITICAL CONSTRAINTS (NEVER CHANGE):
+- Prices are FIXED (set by pricing team)
+- Products are FIXED (set by product team)
+- Brand guidelines are FIXED
+
+YOUR JOB:
+Convert customer language → creative brief language
+Focus on what CAN be changed:
+- Messaging and positioning
+- Visual presentation
+- Copy tone and style
+- Proof points emphasized
+- Channel strategy
+- Audience targeting
+
+When customers say "too expensive":
+❌ DON'T suggest lowering price
+✅ DO suggest better value communication, show what's included, emphasize quality, adjust targeting
+
+When customers say "boring":
+❌ DON'T change the product
+✅ DO suggest more engaging copy, better visuals, social proof, urgency
+
+Output should be professional creative direction that a designer/copywriter can execute."""
+
+# Synthesis Agent System Prompt
+SYNTHESIS_PROMPT = """You are a Synthesis Agent. Your job is to take creative direction and structure it into a clean JSON brief for production teams.
+
+Output valid JSON with this structure:
+{
+  "persona": "[name]",
+  "overall_assessment": {
+    "original_score": [number],
+    "key_issues": ["issue1", "issue2"],
+    "opportunities": ["opp1", "opp2"]
+  },
+  "optimized_version": {
+    "headline": "[specific headline]",
+    "subheadline": "[if needed]",
+    "body_copy": "[key messages]",
+    "cta": "[call to action]",
+    "price_messaging": "[how to present the fixed price]",
+    "visual_direction": "[specific visual guidance]",
+    "proof_points": ["point1", "point2"],
+    "tone": "[description]"
+  },
+  "production_notes": {
+    "priority_changes": ["change1", "change2"],
+    "channel_optimization": "[guidance]",
+    "success_metrics": "[what to measure]"
+  }
+}
+
+Be specific and actionable. Production teams should know exactly what to create."""
+
+# Initialize session state
 if "messages" not in st.session_state:
     st.session_state.messages = {}
+if "brief_results" not in st.session_state:
+    st.session_state.brief_results = None
 
 if selected_persona not in st.session_state.messages:
     st.session_state.messages[selected_persona] = []
@@ -216,167 +252,67 @@ if selected_persona not in st.session_state.messages:
 # Function to encode image to base64
 def encode_image_to_base64(image_file):
     """Convert uploaded image to base64 string"""
+    image_file.seek(0)
     return base64.b64encode(image_file.read()).decode('utf-8')
 
-# Creative Testing Section
-st.markdown("---")
-with st.expander("🎨 Test Creative Assets (CLAUDE VISION!)", expanded=False):
-    st.markdown("**Upload ad creative and Claude will ACTUALLY SEE and evaluate it**")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        uploaded_image = st.file_uploader(
-            "Upload ad creative (PNG/JPG)",
-            type=['png', 'jpg', 'jpeg'],
-            key=f"image_{selected_persona}"
-        )
+# Function to call Claude API
+def call_claude(system_prompt, user_message, image_data=None, media_type=None):
+    """Call Claude API with optional image"""
+    try:
+        api_key = st.secrets.get("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            return None, "API key not found"
         
-        if uploaded_image:
-            st.image(uploaded_image, caption="Your Creative", use_column_width=True)
-    
-    with col2:
-        ad_copy = st.text_area(
-            "Ad Copy / Headline (optional)",
-            placeholder="Enter any additional text not visible in the image...",
-            height=150,
-            key=f"copy_{selected_persona}"
-        )
+        client = anthropic.Anthropic(api_key=api_key)
         
-        price_input = st.text_input(
-            "Price Point (optional)",
-            placeholder="e.g., ₱199, ₱999",
-            key=f"price_{selected_persona}"
-        )
-    
-    if st.button("🎯 Get Persona Feedback (Claude Vision!)", type="primary"):
-        if uploaded_image:
-            # Build creative testing prompt
-            test_prompt = f"""I'm showing you a marketing creative/advertisement for Joyful Bites. Please carefully look at the image and evaluate it from your perspective.
-
-Provide:
-
-1. **Visual Reaction** (What catches your eye? What's your first impression of the image?)
-2. **What Works Visually** (Colors, layout, food presentation, people/scenarios shown)
-3. **What Doesn't Work** (Visual issues, concerns, or turn-offs)
-4. **Copy/Message Evaluation** (If there's text in the image, does it resonate?)
-5. **Score** (1-10, where 10 = "I'd definitely order based on this ad")
-6. **Recommendation** (DEPLOY / REVISE / KILL)
-
-"""
-            
-            if ad_copy:
-                test_prompt += f"**Additional Copy:**\n{ad_copy}\n\n"
-            
-            if price_input:
-                test_prompt += f"**Price:** {price_input}\n\n"
-            
-            test_prompt += "Please respond in your authentic voice, considering your budget, preferences, motivations, and what you actually SEE in the image."
-            
-            # Get API key
+        # Build content
+        content = []
+        if image_data and media_type:
+            content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": media_type,
+                    "data": image_data
+                }
+            })
+        content.append({
+            "type": "text",
+            "text": user_message
+        })
+        
+        # Try multiple models
+        models_to_try = [
+            "claude-sonnet-4-20250514",
+            "claude-opus-4-20250514",
+            "claude-sonnet-4-20250110",
+            "claude-3-5-sonnet-20241022",
+            "claude-3-5-sonnet-20240620"
+        ]
+        
+        for model_name in models_to_try:
             try:
-                api_key = st.secrets.get("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
-                
-                if api_key:
-                    # Initialize Anthropic client
-                    client = anthropic.Anthropic(api_key=api_key)
-                    
-                    # Reset file pointer and encode image
-                    uploaded_image.seek(0)
-                    image_data = uploaded_image.read()
-                    base64_image = base64.b64encode(image_data).decode('utf-8')
-                    
-                    # Determine media type
-                    if uploaded_image.type == "image/png":
-                        media_type = "image/png"
-                    elif uploaded_image.type in ["image/jpeg", "image/jpg"]:
-                        media_type = "image/jpeg"
-                    else:
-                        media_type = "image/jpeg"
-                    
-                    with st.spinner(f"{selected_persona} is looking at your creative and thinking..."):
-                        # Try multiple Claude 4 models in order of preference
-                        models_to_try = [
-                            "claude-sonnet-4-20250514",      # Claude Sonnet 4.5 (best balance)
-                            "claude-opus-4-20250514",        # Claude Opus 4.5 (most powerful)
-                            "claude-sonnet-4-20250110",      # Claude Sonnet 4 (stable)
-                            "claude-3-5-sonnet-20241022",    # Fallback to Claude 3.5
-                            "claude-3-5-sonnet-20240620"     # Fallback to older Claude 3.5
-                        ]
-                        
-                        message = None
-                        last_error = None
-                        
-                        for model_name in models_to_try:
-                            try:
-                                # Call Claude API with vision
-                                message = client.messages.create(
-                                    model=model_name,
-                                    max_tokens=1500,
-                                    system=PERSONA_PROMPTS[selected_persona],
-                                    messages=[
-                                        {
-                                            "role": "user",
-                                            "content": [
-                                                {
-                                                    "type": "image",
-                                                    "source": {
-                                                        "type": "base64",
-                                                        "media_type": media_type,
-                                                        "data": base64_image
-                                                    }
-                                                },
-                                                {
-                                                    "type": "text",
-                                                    "text": test_prompt
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                )
-                                # Success! Break out of loop
-                                break
-                            except Exception as e:
-                                last_error = str(e)
-                                if "not_found_error" in str(e):
-                                    continue  # Try next model
-                                else:
-                                    raise  # Different error, stop trying
-                        
-                        if message is None:
-                            raise Exception(f"No available models found. Last error: {last_error}")
-                        
-                        feedback = message.content[0].text
-                        
-                        # Add to chat history
-                        st.session_state.messages[selected_persona].append({
-                            "role": "user",
-                            "content": f"[Creative Testing: Image uploaded with prompt: {test_prompt}]"
-                        })
-                        
-                        st.session_state.messages[selected_persona].append({
-                            "role": "assistant",
-                            "content": feedback
-                        })
-                        
-                        # Display feedback
-                        st.success("✅ Feedback received (Claude SAW the image!)")
-                        st.markdown(feedback)
-                        st.rerun()
-                        
-                else:
-                    st.error("⚠️ Claude API key not found!")
-                    st.info("Please add your ANTHROPIC_API_KEY to Streamlit secrets.")
-                    
+                message = client.messages.create(
+                    model=model_name,
+                    max_tokens=2000,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": content}]
+                )
+                return message.content[0].text, None
             except Exception as e:
-                st.error(f"Error getting feedback: {str(e)}")
-                st.info("Make sure you have the anthropic library installed and a valid API key.")
-        else:
-            st.warning("Please upload an image to test.")
+                if "not_found_error" in str(e):
+                    continue
+                else:
+                    return None, str(e)
+        
+        return None, "No available models found"
+    except Exception as e:
+        return None, str(e)
 
+# ==========================================
+# MODULE 1: CHAT WITH PERSONA
+# ==========================================
 st.markdown("---")
-
-# Display chat history
 st.subheader(f"💬 Chat with {selected_persona}")
 
 # Display existing messages
@@ -388,91 +324,267 @@ for message in st.session_state.messages[selected_persona]:
 user_input = st.chat_input(f"Ask {selected_persona} a question...")
 
 if user_input:
-    # Add user message to chat history
     st.session_state.messages[selected_persona].append({
         "role": "user",
         "content": user_input
     })
     
-    # Display user message
     with st.chat_message("user"):
         st.markdown(user_input)
     
-    # Get API key
-    try:
-        api_key = st.secrets.get("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
-    except:
-        api_key = os.getenv("ANTHROPIC_API_KEY")
+    with st.chat_message("assistant"):
+        with st.spinner(f"{selected_persona} is thinking..."):
+            response, error = call_claude(
+                PERSONA_PROMPTS[selected_persona],
+                user_input
+            )
+            
+            if error:
+                st.error(f"Error: {error}")
+            else:
+                st.markdown(response)
+                st.session_state.messages[selected_persona].append({
+                    "role": "assistant",
+                    "content": response
+                })
+    st.rerun()
+
+# ==========================================
+# MODULE 2: TEST SINGLE CREATIVE
+# ==========================================
+st.markdown("---")
+with st.expander("🎨 Test Single Creative (Vision Enabled)", expanded=False):
+    st.markdown("**Upload ad creative and get persona feedback**")
     
-    if api_key:
-        # Call Claude API
-        with st.chat_message("assistant"):
-            with st.spinner(f"{selected_persona} is thinking..."):
-                try:
-                    # Initialize Anthropic client
-                    client = anthropic.Anthropic(api_key=api_key)
-                    
-                    # Build message history for Claude
-                    claude_messages = []
-                    for msg in st.session_state.messages[selected_persona]:
-                        claude_messages.append({
-                            "role": msg["role"],
-                            "content": msg["content"]
-                        })
-                    
-                    # Try multiple Claude 4 models in order of preference
-                    models_to_try = [
-                        "claude-sonnet-4-20250514",      # Claude Sonnet 4.5 (best balance)
-                        "claude-opus-4-20250514",        # Claude Opus 4.5 (most powerful)
-                        "claude-sonnet-4-20250110",      # Claude Sonnet 4 (stable)
-                        "claude-3-5-sonnet-20241022",    # Fallback to Claude 3.5
-                        "claude-3-5-sonnet-20240620"     # Fallback to older Claude 3.5
-                    ]
-                    
-                    message = None
-                    last_error = None
-                    
-                    for model_name in models_to_try:
-                        try:
-                            # Call Claude API
-                            message = client.messages.create(
-                                model=model_name,
-                                max_tokens=1000,
-                                system=PERSONA_PROMPTS[selected_persona],
-                                messages=claude_messages
-                            )
-                            # Success! Break out of loop
-                            break
-                        except Exception as e:
-                            last_error = str(e)
-                            if "not_found_error" in str(e):
-                                continue  # Try next model
-                            else:
-                                raise  # Different error, stop trying
-                    
-                    if message is None:
-                        raise Exception(f"No available models found. Last error: {last_error}")
-                    
-                    # Extract response
-                    assistant_response = message.content[0].text
-                    
-                    # Display response
-                    st.markdown(assistant_response)
-                    
-                    # Add to chat history
-                    st.session_state.messages[selected_persona].append({
-                        "role": "assistant",
-                        "content": assistant_response
-                    })
-                    
-                    st.rerun()
-                    
-                except Exception as e:
-                    st.error(f"Error calling Claude API: {str(e)}")
-                    st.info("💡 Make sure you have a valid Anthropic API key in secrets.")
-    else:
-        st.error("⚠️ Claude API key not found!")
-        st.info("Please add your API key to Streamlit secrets (`ANTHROPIC_API_KEY`) or environment variables.")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        uploaded_image_single = st.file_uploader(
+            "Upload ad creative (PNG/JPG)",
+            type=['png', 'jpg', 'jpeg'],
+            key=f"single_image_{selected_persona}"
+        )
+        
+        if uploaded_image_single:
+            st.image(uploaded_image_single, caption="Your Creative", use_column_width=True)
+    
+    with col2:
+        ad_copy_single = st.text_area(
+            "Ad Copy / Headline (optional)",
+            placeholder="Enter any additional text...",
+            height=150,
+            key=f"single_copy_{selected_persona}"
+        )
+        
+        price_single = st.text_input(
+            "Price Point",
+            placeholder="e.g., ₱199",
+            key=f"single_price_{selected_persona}"
+        )
+    
+    if st.button("🎯 Get Persona Feedback", key="single_test"):
+        if uploaded_image_single:
+            uploaded_image_single.seek(0)
+            image_data = uploaded_image_single.read()
+            base64_image = base64.b64encode(image_data).decode('utf-8')
+            
+            media_type = "image/png" if uploaded_image_single.type == "image/png" else "image/jpeg"
+            
+            test_prompt = f"""I'm showing you a marketing creative for Joyful Bites. Please evaluate it:
+
+1. **Visual Reaction** (first impression)
+2. **What Works Visually**
+3. **What Doesn't Work**
+4. **Copy/Message Evaluation**
+5. **Score** (1-10)
+6. **Recommendation** (DEPLOY / REVISE / KILL)
+
+"""
+            if ad_copy_single:
+                test_prompt += f"**Additional Copy:** {ad_copy_single}\n\n"
+            if price_single:
+                test_prompt += f"**Price:** {price_single}\n\n"
+            
+            test_prompt += "Respond in your authentic voice."
+            
+            with st.spinner(f"{selected_persona} is evaluating..."):
+                uploaded_image_single.seek(0)
+                response, error = call_claude(
+                    PERSONA_PROMPTS[selected_persona],
+                    test_prompt,
+                    base64_image,
+                    media_type
+                )
+                
+                if error:
+                    st.error(f"Error: {error}")
+                else:
+                    st.success("✅ Feedback received!")
+                    st.markdown(response)
+
+# ==========================================
+# MODULE 3: GENERATE OPTIMIZED BRIEFS
+# ==========================================
+st.markdown("---")
+with st.expander("📄 Generate Hyperpersonalized Briefs (Module 3)", expanded=False):
+    st.markdown("**Upload ONE master creative → Get 3 optimized briefs (one per persona)**")
+    st.info("💡 Prices and products are fixed. Briefs focus on messaging/positioning optimization.")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        uploaded_image_brief = st.file_uploader(
+            "Upload Master Creative (PNG/JPG)",
+            type=['png', 'jpg', 'jpeg'],
+            key="brief_image"
+        )
+        
+        if uploaded_image_brief:
+            st.image(uploaded_image_brief, caption="Master Creative", use_column_width=True)
+    
+    with col2:
+        st.markdown("**Fixed Parameters:**")
+        product_name = st.text_input("Product", value="Spicy Chickenjoy", key="product")
+        price_point = st.text_input("Price (FIXED)", value="₱199", key="price")
+        campaign_goal = st.text_input("Campaign Goal", value="Trial & Awareness", key="goal")
+        channel = st.text_input("Primary Channel", value="Social Media", key="channel")
+    
+    if st.button("🚀 Generate 3 Optimized Briefs", type="primary", key="generate_briefs"):
+        if uploaded_image_brief:
+            st.markdown("---")
+            st.markdown("### 🔄 Processing...")
+            
+            # Prepare image
+            uploaded_image_brief.seek(0)
+            image_data = uploaded_image_brief.read()
+            base64_image = base64.b64encode(image_data).decode('utf-8')
+            media_type = "image/png" if uploaded_image_brief.type == "image/png" else "image/jpeg"
+            
+            # Base evaluation prompt
+            base_prompt = f"""Evaluate this marketing creative for {product_name} priced at {price_point}.
+
+Campaign Goal: {campaign_goal}
+Channel: {channel}
+
+Provide honest feedback on:
+1. Visual impression
+2. What works
+3. What doesn't work
+4. How well it fits YOUR needs and preferences
+5. Score (1-10)
+6. Recommendation
+
+Remember: Price is FIXED at {price_point}. Focus on messaging/positioning."""
+            
+            results = {}
+            
+            # Process each persona
+            for persona_name, persona_data in persona_options.items():
+                st.markdown(f"#### {persona_data['icon']} Processing {persona_name}...")
+                
+                progress = st.progress(0, text=f"Step 1/3: Getting {persona_name}'s feedback...")
+                
+                # STEP 1: Get persona feedback
+                uploaded_image_brief.seek(0)
+                persona_feedback, error1 = call_claude(
+                    PERSONA_PROMPTS[persona_name],
+                    base_prompt,
+                    base64_image,
+                    media_type
+                )
+                
+                if error1:
+                    st.error(f"Error getting {persona_name} feedback: {error1}")
+                    continue
+                
+                progress.progress(33, text=f"Step 2/3: Creative translation for {persona_name}...")
+                
+                # STEP 2: Creative Translation Layer
+                translation_prompt = f"""Raw customer feedback from {persona_name}:
+
+{persona_feedback}
+
+Fixed constraints:
+- Product: {product_name}
+- Price: {price_point} (CANNOT CHANGE)
+- Channel: {channel}
+- Goal: {campaign_goal}
+
+Translate this feedback into actionable creative direction. Focus on what CAN be changed: messaging, positioning, visuals, copy tone, proof points, targeting.
+
+When feedback mentions price concerns, suggest value communication strategies, NOT price changes."""
+                
+                creative_direction, error2 = call_claude(
+                    CREATIVE_TRANSLATION_PROMPT,
+                    translation_prompt
+                )
+                
+                if error2:
+                    st.error(f"Error in creative translation for {persona_name}: {error2}")
+                    continue
+                
+                progress.progress(66, text=f"Step 3/3: Generating JSON brief for {persona_name}...")
+                
+                # STEP 3: Synthesis Agent
+                synthesis_prompt = f"""Creative direction for {persona_name}:
+
+{creative_direction}
+
+Generate a structured JSON brief for production teams. Be specific and actionable."""
+                
+                json_brief, error3 = call_claude(
+                    SYNTHESIS_PROMPT,
+                    synthesis_prompt
+                )
+                
+                if error3:
+                    st.error(f"Error generating brief for {persona_name}: {error3}")
+                    continue
+                
+                progress.progress(100, text=f"✅ Complete for {persona_name}!")
+                
+                results[persona_name] = {
+                    "persona_feedback": persona_feedback,
+                    "creative_direction": creative_direction,
+                    "json_brief": json_brief
+                }
+            
+            st.session_state.brief_results = results
+            st.success("🎉 All 3 briefs generated!")
+            st.rerun()
+        else:
+            st.warning("Please upload a master creative image")
+    
+    # Display results
+    if st.session_state.brief_results:
+        st.markdown("---")
+        st.markdown("### 📊 Generated Briefs")
+        
+        for persona_name, data in st.session_state.brief_results.items():
+            persona_data = persona_options[persona_name]
+            
+            with st.expander(f"{persona_data['icon']} {persona_name} - Optimized Brief", expanded=True):
+                
+                tab1, tab2, tab3 = st.tabs(["📋 JSON Brief", "🎨 Creative Direction", "💬 Raw Feedback"])
+                
+                with tab1:
+                    st.markdown("**Production-Ready Brief:**")
+                    st.code(data["json_brief"], language="json")
+                    st.download_button(
+                        f"Download {persona_name} Brief",
+                        data["json_brief"],
+                        file_name=f"{persona_name.replace(' ', '_')}_brief.json",
+                        mime="application/json",
+                        key=f"download_{persona_name}"
+                    )
+                
+                with tab2:
+                    st.markdown("**Creative Translation:**")
+                    st.markdown(data["creative_direction"])
+                
+                with tab3:
+                    st.markdown("**Original Persona Feedback:**")
+                    st.markdown(data["persona_feedback"])
 
 # Clear conversation button
 st.sidebar.markdown("---")
@@ -480,26 +592,19 @@ if st.sidebar.button("🗑️ Clear Conversation"):
     st.session_state.messages[selected_persona] = []
     st.rerun()
 
+if st.sidebar.button("🔄 Reset Brief Results"):
+    st.session_state.brief_results = None
+    st.rerun()
+
 # Example questions
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 💡 Example Questions")
+st.sidebar.markdown("### 💡 Quick Tips")
 st.sidebar.markdown("""
-**Product Launch:**
-- What would make you try our new Spicy Chickenjoy?
-- What concerns would you have?
-- What price point makes sense?
-
-**Messaging:**
-- How should we describe this offer?
-- What headline would catch your attention?
-- What proof points matter most?
-
-**Channels:**
-- Where do you want to see this ad?
-- What time of day should we reach you?
-- What format works best?
+**Chat:** Ask personas questions
+**Test:** Get single persona feedback  
+**Briefs:** Get 3 optimized versions
 """)
 
 # Footer
 st.markdown("---")
-st.caption("💬 **Joyful Bites Persona Agents** | Powered by Claude 3.5 Sonnet with Vision | Module 2 of Project Resonance")
+st.caption("🎯 **Joyful Bites Marketing System** | Powered by Claude Sonnet 4 | Project Resonance POC")
