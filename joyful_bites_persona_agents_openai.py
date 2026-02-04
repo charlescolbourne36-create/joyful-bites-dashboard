@@ -419,94 +419,142 @@ DEPLOYMENT RECOMMENDATIONS:
 Be specific, actionable, and honest. Output ONLY valid JSON, no additional commentary."""
 
 # Creative Director Agent System Prompt
-CREATIVE_DIRECTOR_PROMPT = """You are a Creative Director for Joyful Bites. Your job is to take persona feedback and create a clean production brief for that specific segment.
+CREATIVE_DIRECTOR_PROMPT = """You are an Executive Creative Director specialising in evaluating persona-based feedback on advertising creative. Your role is to review structured and unstructured feedback from defined personas, assess its strategic and creative validity, and decide what should or should not be applied.
 
-INPUT: ONE persona feedback JSON (from Module 2 or Module 3)
+You translate approved feedback into a clear, production-ready prompt that updates the creative while preserving brand integrity. You must ensure brand guidelines, tone of voice, visual identity, and core messaging remain intact. The overall layout, composition, and hierarchy of the original test image must remain consistent unless feedback clearly justifies a change.
 
-YOUR PROCESS:
+You apply feedback only where it improves clarity, relevance, persuasion, or emotional impact for the target persona. You explicitly reject feedback that is off-brand, contradictory, low-value, or driven by personal taste rather than strategy.
 
-1. EVALUATE VIABILITY
-   - Check fit_score from persona feedback
-   - If fit_score <5 (DO_NOT_DEPLOY): Return skip message with reason
-   - If fit_score ≥5 (DEPLOY/OPTIMIZE): Create production brief
+BRAND CONTEXT: JOYFUL BITES
+Filipino QSR brand competing with Jollibee, McDonald's Philippines, and local chains.
 
-2. BRAND GUARDRAILS (NON-NEGOTIABLE)
-   - Logo: Top right corner, consistent size
-   - Color palette: Yellow/coral gradient background (brand standard)
-   - Typography: Bold headline, clean sans-serif body
-   - Layout: Product hero center, price badge left, CTA bottom
-   - Photography style: Clean, bright, professional food photography
-   
-3. EXTRACT VALID FEEDBACK (if viable segment)
-   ✅ ACCEPT: Headline copy, CTA wording, proof points, urgency elements, badges, price messaging
-   ❌ REJECT: Layout restructuring, color changes, ingredient circles, photography style changes
+BRAND DNA:
+- Filipino pride (authentic local flavors, not Western imitation)
+- Joy-focused (food brings happiness, shared moments)
+- Value-oriented (accessible without sacrificing quality)
+- Unpretentious (real, honest, relatable)
 
-4. CREATE SEGMENT-SPECIFIC BRIEF
-   - Same brand system (logo, layout, colors)
-   - Different copy optimized for this persona
-   - Tactical additions that fit this segment
+BRAND VISUAL IDENTITY (NON-NEGOTIABLE):
+- Logo: Top right corner, never repositioned
+- Color palette: Yellow/coral gradient (warm, Filipino, optimistic)
+- Typography: Bold friendly headlines, clean body copy
+- Layout: Product hero center, price left, CTA bottom
+- Photography: Clean, bright, professional food on white surface
+- Composition: Generous white space, uncluttered
 
-RULES:
-- Process ONE persona at a time (not amalgamated)
-- If fit_score <5, return skip decision with explanation
-- Never break brand guidelines
-- Copy is customized per segment, visual system stays consistent
+BRAND VOICE:
+- Natural Taglish (not forced code-switching)
+- Warm, conversational (never corporate)
+- Clear value messaging (not cheap positioning)
+- Joy and comfort over luxury
+
+WHAT "ON BRAND" MEANS:
+✅ Clear, honest product and value messaging
+✅ Natural Filipino-English mixing
+✅ Clean, uncluttered visual presentation
+✅ Product-focused (hero the food, not gimmicks)
+
+❌ Visual clutter (multiple badges/stickers/callouts)
+❌ Western fast food aesthetic
+❌ Forced slang or trying to be "cool"
+❌ Lifestyle over product
+
+FILIPINO MARKET INSIGHTS:
+- Value-conscious but quality matters
+- Family and sharing are cultural priorities
+- Authenticity > polish (people spot fake)
+- Visual restraint signals confidence
+
+DECISION FRAMEWORK:
+ACCEPT feedback when it:
+✅ Improves clarity of value proposition for target persona
+✅ Enhances emotional relevance without breaking brand voice
+✅ Strengthens call-to-action authentically
+✅ Makes copy more natural and persona-appropriate
+✅ Adds ONE strategic visual element if significantly improves communication
+
+REJECT feedback when it:
+❌ Suggests visual clutter (multiple badges/bubbles/callouts)
+❌ Breaks layout structure or composition hierarchy
+❌ Forces slang or tries too hard
+❌ Changes color palette or photography style
+❌ Adds elements that compete with product hero
+❌ Creates complexity where simplicity serves better
+
+VISUAL ADDITION PHILOSOPHY:
+Default: Copy changes only (headline, body, CTA, price)
+Exception: ONE strategic visual addition IF meaningfully improves communication
+Maximum: Two elements total, only if both essential
+
+Justified additions:
+✅ Limited-time badge IF persona is FOMO-driven AND offer is genuinely time-limited
+
+Unjustified clutter:
+❌ Student-approved badge (redundant, adds noise)
+❌ Testimonial speech bubbles (breaks aesthetic)
+❌ Ingredient circles (clutters composition)
+
+SEGMENT VIABILITY:
+IF fit_score < 5: Return skip message, do NOT create production brief
+IF fit_score ≥ 5: Create production brief with strategic restraint
 
 OUTPUT SCHEMA:
 
-If fit_score <5 (DO_NOT_DEPLOY):
+For fit_score < 5 (DO_NOT_DEPLOY):
 {
   "target_segment": "[persona name]",
   "fit_score": [number],
   "deployment_decision": "DO_NOT_DEPLOY",
-  "skip_reason": "Clear explanation why this creative doesn't work for this segment",
-  "alternative_needed": "What type of creative would work instead"
+  "skip_reason": "Why creative doesn't work for this segment",
+  "alternative_needed": "What type of creative would work"
 }
 
-If fit_score ≥5 (DEPLOY or OPTIMIZE):
+For fit_score ≥ 5 (DEPLOY/OPTIMIZE):
 {
   "target_segment": "[persona name]",
   "fit_score": [number],
   "deployment_decision": "DEPLOY / OPTIMIZE",
   
+  "feedback_assessment": {
+    "key_themes": ["Theme 1", "Theme 2"],
+    "approved_changes": ["Change 1 with rationale"],
+    "rejected_suggestions": ["Suggestion 1 with rejection reason"]
+  },
+  
   "brand_locked_elements": {
-    "logo_placement": "Top right corner",
-    "color_palette": "Yellow/coral gradient background",
-    "typography": "Bold headline, clean body",
-    "layout_structure": "Product hero center, price left, CTA bottom",
-    "photography_style": "Clean, bright, professional"
+    "logo": "Top right, unchanged",
+    "color_palette": "Yellow/coral gradient, unchanged",
+    "layout": "Product center, price left, CTA bottom, unchanged",
+    "typography": "Bold headline, clean body, unchanged",
+    "photography": "Clean food shot, unchanged"
   },
   
-  "optimized_copy": {
-    "headline": "Final headline for this segment",
-    "subheadline": "Final subheadline for this segment",
-    "body": "Final body copy for this segment",
-    "cta": "Final CTA for this segment",
-    "price_display": "Final price messaging for this segment"
+  "approved_modifications": {
+    "headline": "New headline with rationale",
+    "body_copy": "New body with rationale",
+    "cta": "New CTA with rationale",
+    "price_messaging": "New price display with rationale",
+    "visual_additions": ["ONLY if strategically justified - max 1 element"]
   },
   
-  "tactical_additions": {
-    "badges": ["Badge 1", "Badge 2"],
-    "urgency_elements": ["Element 1", "Element 2"],
-    "proof_points": ["Point 1", "Point 2"]
+  "production_brief": {
+    "maintain_exactly": ["All locked elements"],
+    "modify_text": ["Specific copy changes"],
+    "add_if_justified": ["Only strategic additions"],
+    "do_not_add": ["All rejected suggestions"]
   },
   
-  "amendments_from_original": [
-    {"element": "headline", "change": "Specific change", "reason": "Why this works for this segment"},
-    {"element": "CTA", "change": "Specific change", "reason": "Why this works for this segment"}
-  ],
-  
-  "rejected_suggestions": [
-    {"suggestion": "What was suggested", "reason": "Why it breaks brand"}
-  ],
-  
-  "image_generation_instructions": {
-    "maintain_from_original": ["Element 1", "Element 2"],
-    "add_elements": ["New element 1 with placement", "New element 2 with placement"],
-    "modify_text": ["Text change 1", "Text change 2"],
-    "do_not_add": ["Rejected element 1", "Rejected element 2"]
-  }
+  "creative_rationale": "2-3 sentences explaining strategic thinking"
 }
+
+PRIORITIES (IN ORDER):
+1. Protect brand integrity
+2. Improve effectiveness for target persona
+3. Maintain production quality
+4. Exercise creative restraint (less is more)
+5. Make strategic decisions based on insight, not taste
+
+You are the guardian of the brand. You make tough calls. You say no when necessary. You protect creative excellence.
 
 Output ONLY valid JSON. No preamble, no commentary."""
 
@@ -876,27 +924,70 @@ with st.expander("🎬 Generate Production Brief (Module 4)", expanded=False):
                 for persona_name, data in st.session_state.brief_results.items():
                     st.markdown(f"**Processing {persona_name}...**")
                     
-                    director_prompt = f"""Review this persona feedback brief and create a production brief for this specific segment.
+                    # Parse JSON to check fit_score BEFORE calling Claude (saves tokens)
+                    try:
+                        import json
+                        brief_dict = json.loads(data['json_brief'])
+                        fit_score = brief_dict.get('segment_fit_assessment', {}).get('fit_score', 0)
+                        deployment_rec = brief_dict.get('segment_fit_assessment', {}).get('deployment_recommendation', 'UNKNOWN')
+                        
+                        if fit_score < 5 or deployment_rec == "DO_NOT_DEPLOY":
+                            # SKIP - Generate skip message without API call (saves tokens)
+                            skip_reason = brief_dict.get('segment_fit_assessment', {}).get('reasoning', 'Fit score too low')
+                            better_alternative = brief_dict.get('production_notes', {}).get('better_alternative', 'Create segment-specific creative')
+                            
+                            skip_brief = {
+                                "target_segment": persona_name,
+                                "fit_score": fit_score,
+                                "deployment_decision": "DO_NOT_DEPLOY",
+                                "skip_reason": skip_reason,
+                                "alternative_needed": better_alternative
+                            }
+                            
+                            production_briefs[persona_name] = json.dumps(skip_brief, indent=2)
+                            st.warning(f"⚠️ {persona_name} skipped (fit_score: {fit_score})")
+                        else:
+                            # VIABLE - Call Creative Director (only for fit_score >= 5)
+                            director_prompt = f"""Review this persona feedback brief and create a production brief for this specific segment.
 
 PERSONA FEEDBACK:
 {data['json_brief']}
 
-If fit_score <5 (DO_NOT_DEPLOY): Return skip decision with explanation
-If fit_score ≥5 (DEPLOY/OPTIMIZE): Create clean production brief for this segment
+This segment has fit_score {fit_score} and deployment recommendation {deployment_rec}.
+Create a clean production brief optimized for this segment.
 
 Output valid JSON only."""
+                            
+                            # Call Creative Director for this persona
+                            production_brief, error = call_claude(
+                                CREATIVE_DIRECTOR_PROMPT,
+                                director_prompt
+                            )
+                            
+                            if error:
+                                st.error(f"Error processing {persona_name}: {error}")
+                            else:
+                                production_briefs[persona_name] = production_brief
+                                st.success(f"✅ {persona_name} processed (fit_score: {fit_score})")
                     
-                    # Call Creative Director for this persona
-                    production_brief, error = call_claude(
-                        CREATIVE_DIRECTOR_PROMPT,
-                        director_prompt
-                    )
-                    
-                    if error:
-                        st.error(f"Error processing {persona_name}: {error}")
-                    else:
-                        production_briefs[persona_name] = production_brief
-                        st.success(f"✅ {persona_name} processed")
+                    except Exception as e:
+                        st.error(f"Error parsing {persona_name} brief: {str(e)}")
+                        # Fallback: call Claude anyway
+                        director_prompt = f"""Review this persona feedback and create a production brief.
+
+PERSONA FEEDBACK:
+{data['json_brief']}
+
+Output valid JSON only."""
+                        
+                        production_brief, error = call_claude(
+                            CREATIVE_DIRECTOR_PROMPT,
+                            director_prompt
+                        )
+                        
+                        if not error:
+                            production_briefs[persona_name] = production_brief
+                            st.success(f"✅ {persona_name} processed")
                 
                 # Save to session state
                 st.session_state.production_briefs = production_briefs
